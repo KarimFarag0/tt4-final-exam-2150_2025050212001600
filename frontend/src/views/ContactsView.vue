@@ -1,7 +1,7 @@
 <template>
     <div>
       <h1>Contacts</h1>
-      <p>This is where your contact list will go.</p>
+      <p>This is where the contact list will go.</p>
     </div>
   </template>
   
