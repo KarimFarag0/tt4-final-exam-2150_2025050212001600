@@ -1,34 +1,43 @@
 version: '3.8'
 
 services:
-  api:
+  backend:
     build:
-      context: ./backend  # Path to your backend directory
-      dockerfile: Dockerfile  
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"  # Frontend communicates with backend via this port
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    volumes:
-      - ./backend:/app  
-    ports:
-      - "5000:80"  # Exposes the API to port 5000, listens internally on port 80
-    networks:
-      - internal_network
-
-  app:
-    build:
-      context: ./frontend 
-      dockerfile: Dockerfile  
-    ports:
-      - "8080:80"  # Exposes the Vue frontend on port 8080
-    networks:
-      - internal_network
+      - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=db;Database=contacts;User=sa;Password=Your_password123;  # Ensure the backend knows where the DB is
     depends_on:
-      - api  # Ensure the API starts before the frontend
+      - db
+    networks:
+      - app-network
 
-volumes:
-  frontend_data:
-  backend_data:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"  # Exposes the frontend app on port 5173
+    environment:
+      - VITE_API_URL=http://backend:5000/api  # Points to the backend service
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  db:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    networks:
+      - app-network
 
 networks:
-  internal_network:
+  app-network:
     driver: bridge

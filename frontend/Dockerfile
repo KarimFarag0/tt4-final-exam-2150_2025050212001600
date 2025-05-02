@@ -1,31 +1,29 @@
-# Use official Node.js image as base
-FROM node:16
+# Use an official Node.js image to build the frontend
+FROM node:16 AS build
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json and package-lock.json to install dependencies
+COPY ./Frontend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-RUN npm install crypto-browserify
+# Copy the rest of the frontend project files
+COPY ./Frontend ./
 
-# Copy the rest of the application
-COPY . .
-
-# Build the Vue.js app
+# Build the Vue.js app for production
 RUN npm run build
 
-# Install Nginx to serve the app
-RUN apt-get update && apt-get install -y nginx
+# Use a simple web server to serve the static files
+FROM nginx:alpine
 
-# Copy the built app to Nginx's HTML directory
-COPY dist/ /usr/share/nginx/html
+# Copy the build folder to the nginx server's web directory
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port 80 for the web server
+# Expose port 80 to be accessible outside the container
 EXPOSE 80
 
-# Start Nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

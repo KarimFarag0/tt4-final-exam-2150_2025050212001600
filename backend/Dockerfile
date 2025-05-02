@@ -1,28 +1,30 @@
-# Stage 1: Build the application
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Use the official .NET SDK image as a build stage
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
-WORKDIR /src
-
-# Copy the project file and restore dependencies
-COPY *.csproj .
-RUN dotnet restore
-
-# Copy the rest of the code
-COPY . .
-
-# Publish the application in Release mode to the /app/publish directory
-RUN dotnet publish -c Release -o /app/publish
-
-# Stage 2: Setup the runtime container
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
-
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the published application from the build stage
+# Copy the project file(s) to the container and restore dependencies
+COPY ./backend/*.csproj ./
+RUN dotnet restore
+
+# Copy the remaining project files to the container
+COPY ./backend/. ./
+
+# Publish the application to a folder
+RUN dotnet publish -c Release -o /app/publish
+
+# Use the official .NET runtime image as a base for the final image
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the published app from the build stage to the final stage
 COPY --from=build /app/publish .
 
-# Expose the port your app will run on (make sure this matches your app’s port)
-EXPOSE 80
+# Set the entry point to run the API
+ENTRYPOINT ["dotnet", "Backend.dll"]
 
-# Start the application
-ENTRYPOINT ["dotnet", "backend.dll"]
+# Expose port 80 to be accessible outside the container
+EXPOSE 80
