@@ -35,12 +35,15 @@ namespace backend.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateContact(int id, Contact updatedContact)
+        public async Task<ActionResult<Contact>> UpdateContact(int id, Contact updatedContact)
         {
             if (id != updatedContact.ID) return BadRequest();
+
             _context.Entry(updatedContact).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            // Return the updated contact
+             return Ok(updatedContact);
         }
 
         [HttpDelete("{id}")]

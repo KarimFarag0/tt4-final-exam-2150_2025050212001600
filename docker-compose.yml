@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./backend  # Path to your backend directory
+      dockerfile: Dockerfile  
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./backend:/app  
+    ports:
+      - "5000:80"  # Exposes the API to port 5000, listens internally on port 80
+    networks:
+      - internal_network
+
+  app:
+    build:
+      context: ./frontend 
+      dockerfile: Dockerfile  
+    ports:
+      - "8080:80"  # Exposes the Vue frontend on port 8080
+    networks:
+      - internal_network
+    depends_on:
+      - api  # Ensure the API starts before the frontend
+
+volumes:
+  frontend_data:
+  backend_data:
+
+networks:
+  internal_network:
+    driver: bridge
